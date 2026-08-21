@@ -1,5 +1,9 @@
 package com.learningplatform.backend.enums;
 
+/**
+ * Supported types of learning resources.
+ * We only store metadata + external links (never the actual content).
+ */
 public enum ResourceType {
     VIDEO,
     BOOK,
