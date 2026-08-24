@@ -1,14 +1,20 @@
 package com.learningplatform.backend.service;
 
+import com.learningplatform.backend.dto.PagedResponse;
 import com.learningplatform.backend.dto.ResourceRequest;
 import com.learningplatform.backend.dto.ResourceResponse;
-import java.util.List;
+import com.learningplatform.backend.enums.ResourceType;
+import org.springframework.data.domain.Pageable;
 
 public interface ResourceService {
 
-    List<ResourceResponse> getPublishedResources();
-
-    List<ResourceResponse> getPublishedResourcesByTopic(Long topicId);
+    PagedResponse<ResourceResponse> searchPublishedResources(
+            Long topicId,
+            ResourceType resourceType,
+            String difficulty,
+            String keyword,
+            Pageable pageable
+    );
 
     ResourceResponse getResourceById(Long id);
 

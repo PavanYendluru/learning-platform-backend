@@ -1,17 +1,22 @@
 package com.learningplatform.backend.service.impl;
 
+import com.learningplatform.backend.dto.PagedResponse;
 import com.learningplatform.backend.dto.ResourceRequest;
 import com.learningplatform.backend.dto.ResourceResponse;
 import com.learningplatform.backend.entity.Resource;
 import com.learningplatform.backend.entity.Topic;
 import com.learningplatform.backend.enums.ResourceStatus;
+import com.learningplatform.backend.enums.ResourceType;
+import com.learningplatform.backend.exception.ConflictException;
+import com.learningplatform.backend.exception.ResourceNotFoundException;
+import com.learningplatform.backend.exception.TopicNotFoundException;
 import com.learningplatform.backend.repository.ResourceRepository;
 import com.learningplatform.backend.repository.TopicRepository;
 import com.learningplatform.backend.service.ResourceService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -20,50 +25,50 @@ public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
     private final TopicRepository topicRepository;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository, TopicRepository topicRepository) {
+    public ResourceServiceImpl(ResourceRepository resourceRepository,
+                               TopicRepository topicRepository) {
         this.resourceRepository = resourceRepository;
         this.topicRepository = topicRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ResourceResponse> getPublishedResources() {
-        return resourceRepository.findByStatusOrderByCreatedAtDesc(ResourceStatus.PUBLISHED)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
+    public PagedResponse<ResourceResponse> searchPublishedResources(
+            Long topicId,
+            ResourceType resourceType,
+            String difficulty,
+            String keyword,
+            Pageable pageable) {
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ResourceResponse> getPublishedResourcesByTopic(Long topicId) {
-        if (!topicRepository.existsById(topicId)) {
-            throw new RuntimeException("Topic not found with id: " + topicId);
-        }
-        return resourceRepository.findByTopicIdAndStatusOrderByCreatedAtDesc(topicId, ResourceStatus.PUBLISHED)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+        Page<Resource> page = resourceRepository.search(
+                ResourceStatus.PUBLISHED,
+                topicId,
+                resourceType,
+                difficulty,
+                (keyword != null && !keyword.isBlank()) ? keyword.trim() : null,
+                pageable
+        );
+
+        return PagedResponse.from(page.map(this::mapToResponse));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ResourceResponse getResourceById(Long id) {
         Resource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(id));
         return mapToResponse(resource);
     }
 
     @Override
     public ResourceResponse createResource(ResourceRequest request) {
         Topic topic = topicRepository.findById(request.getTopicId())
-                .orElseThrow(() -> new RuntimeException("Topic not found with id: " + request.getTopicId()));
+                .orElseThrow(() -> new TopicNotFoundException(request.getTopicId()));
 
         Resource resource = new Resource();
         resource.setTopic(topic);
         mapRequestToEntity(request, resource);
 
-        // Default status is DRAFT if not provided
         if (request.getStatus() == null) {
             resource.setStatus(ResourceStatus.DRAFT);
         }
@@ -75,24 +80,22 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public ResourceResponse updateResource(Long id, ResourceRequest request) {
         Resource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(id));
 
-        // Allow changing the topic
         if (!resource.getTopic().getId().equals(request.getTopicId())) {
             Topic newTopic = topicRepository.findById(request.getTopicId())
-                    .orElseThrow(() -> new RuntimeException("Topic not found with id: " + request.getTopicId()));
+                    .orElseThrow(() -> new TopicNotFoundException(request.getTopicId()));
             resource.setTopic(newTopic);
         }
 
         mapRequestToEntity(request, resource);
-        Resource updated = resourceRepository.save(resource);
-        return mapToResponse(updated);
+        return mapToResponse(resourceRepository.save(resource));
     }
 
     @Override
     public void deleteResource(Long id) {
         if (!resourceRepository.existsById(id)) {
-            throw new RuntimeException("Resource not found with id: " + id);
+            throw new ResourceNotFoundException(id);
         }
         resourceRepository.deleteById(id);
     }
@@ -120,29 +123,29 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     private ResourceResponse mapToResponse(Resource resource) {
-        ResourceResponse response = new ResourceResponse();
-        response.setId(resource.getId());
-        response.setTopicId(resource.getTopic().getId());
-        response.setTitle(resource.getTitle());
-        response.setDescription(resource.getDescription());
-        response.setResourceType(resource.getResourceType());
-        response.setExternalUrl(resource.getExternalUrl());
-        response.setThumbnailUrl(resource.getThumbnailUrl());
-        response.setAuthor(resource.getAuthor());
-        response.setPublisher(resource.getPublisher());
-        response.setSourceName(resource.getSourceName());
-        response.setDifficulty(resource.getDifficulty());
-        response.setDurationMinutes(resource.getDurationMinutes());
-        response.setLanguage(resource.getLanguage());
-        response.setLicenseType(resource.getLicenseType());
-        response.setLicenseUrl(resource.getLicenseUrl());
-        response.setExternalResourceId(resource.getExternalResourceId());
-        response.setDoi(resource.getDoi());
-        response.setPublicationDate(resource.getPublicationDate());
-        response.setLastVerifiedAt(resource.getLastVerifiedAt());
-        response.setStatus(resource.getStatus());
-        response.setCreatedAt(resource.getCreatedAt());
-        response.setUpdatedAt(resource.getUpdatedAt());
-        return response;
+        ResourceResponse r = new ResourceResponse();
+        r.setId(resource.getId());
+        r.setTopicId(resource.getTopic().getId());
+        r.setTitle(resource.getTitle());
+        r.setDescription(resource.getDescription());
+        r.setResourceType(resource.getResourceType());
+        r.setExternalUrl(resource.getExternalUrl());
+        r.setThumbnailUrl(resource.getThumbnailUrl());
+        r.setAuthor(resource.getAuthor());
+        r.setPublisher(resource.getPublisher());
+        r.setSourceName(resource.getSourceName());
+        r.setDifficulty(resource.getDifficulty());
+        r.setDurationMinutes(resource.getDurationMinutes());
+        r.setLanguage(resource.getLanguage());
+        r.setLicenseType(resource.getLicenseType());
+        r.setLicenseUrl(resource.getLicenseUrl());
+        r.setExternalResourceId(resource.getExternalResourceId());
+        r.setDoi(resource.getDoi());
+        r.setPublicationDate(resource.getPublicationDate());
+        r.setLastVerifiedAt(resource.getLastVerifiedAt());
+        r.setStatus(resource.getStatus());
+        r.setCreatedAt(resource.getCreatedAt());
+        r.setUpdatedAt(resource.getUpdatedAt());
+        return r;
     }
 }

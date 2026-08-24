@@ -4,6 +4,8 @@ import com.learningplatform.backend.dto.DomainRequest;
 import com.learningplatform.backend.dto.DomainResponse;
 import com.learningplatform.backend.entity.Domain;
 import com.learningplatform.backend.enums.Status;
+import com.learningplatform.backend.exception.ConflictException;
+import com.learningplatform.backend.exception.DomainNotFoundException;
 import com.learningplatform.backend.repository.DomainRepository;
 import com.learningplatform.backend.service.DomainService;
 import org.springframework.stereotype.Service;
@@ -37,15 +39,19 @@ public class DomainServiceImpl implements DomainService {
     @Transactional(readOnly = true)
     public DomainResponse getDomainById(Long id) {
         Domain domain = domainRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Domain not found with id: " + id));
+                .orElseThrow(() -> new DomainNotFoundException(id));
+
         return mapToResponse(domain);
     }
 
     @Override
     public DomainResponse createDomain(DomainRequest request) {
+
         // Business rule: name must be unique
         if (domainRepository.existsByNameIgnoreCase(request.getName().trim())) {
-            throw new RuntimeException("Domain with name '" + request.getName() + "' already exists");
+            throw new ConflictException(
+                    "Domain with name '" + request.getName() + "' already exists"
+            );
         }
 
         Domain domain = new Domain();
@@ -55,21 +61,30 @@ public class DomainServiceImpl implements DomainService {
         domain.setIconUrl(request.getIconUrl());
         domain.setBannerUrl(request.getBannerUrl());
         domain.setDifficulty(request.getDifficulty());
-        domain.setStatus(request.getStatus() != null ? request.getStatus() : Status.ACTIVE);
+        domain.setStatus(
+                request.getStatus() != null
+                        ? request.getStatus()
+                        : Status.ACTIVE
+        );
 
         Domain saved = domainRepository.save(domain);
+
         return mapToResponse(saved);
     }
 
     @Override
     public DomainResponse updateDomain(Long id, DomainRequest request) {
+
         Domain domain = domainRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Domain not found with id: " + id));
+                .orElseThrow(() -> new DomainNotFoundException(id));
 
         // If name is changing, check uniqueness
         if (!domain.getName().equalsIgnoreCase(request.getName().trim())
                 && domainRepository.existsByNameIgnoreCase(request.getName().trim())) {
-            throw new RuntimeException("Domain with name '" + request.getName() + "' already exists");
+
+            throw new ConflictException(
+                    "Domain with name '" + request.getName() + "' already exists"
+            );
         }
 
         domain.setName(request.getName().trim());
@@ -84,20 +99,23 @@ public class DomainServiceImpl implements DomainService {
         }
 
         Domain updated = domainRepository.save(domain);
+
         return mapToResponse(updated);
     }
 
     @Override
     public void deleteDomain(Long id) {
+
         if (!domainRepository.existsById(id)) {
-            throw new RuntimeException("Domain not found with id: " + id);
+            throw new DomainNotFoundException(id);
         }
+
         domainRepository.deleteById(id);
     }
 
     /**
      * Converts a name into a URL-friendly slug.
-     * Example: "Spring Boot" → "spring-boot"
+     * Example: "Spring Boot" -> "spring-boot"
      */
     private String generateSlug(String name) {
         return name.trim()
@@ -108,7 +126,9 @@ public class DomainServiceImpl implements DomainService {
     }
 
     private DomainResponse mapToResponse(Domain domain) {
+
         DomainResponse response = new DomainResponse();
+
         response.setId(domain.getId());
         response.setName(domain.getName());
         response.setSlug(domain.getSlug());
@@ -119,6 +139,7 @@ public class DomainServiceImpl implements DomainService {
         response.setStatus(domain.getStatus());
         response.setCreatedAt(domain.getCreatedAt());
         response.setUpdatedAt(domain.getUpdatedAt());
+
         return response;
     }
 }

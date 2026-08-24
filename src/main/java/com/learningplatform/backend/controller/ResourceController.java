@@ -1,15 +1,20 @@
 package com.learningplatform.backend.controller;
 
 import com.learningplatform.backend.dto.ApiResponse;
+import com.learningplatform.backend.dto.PagedResponse;
 import com.learningplatform.backend.dto.ResourceRequest;
 import com.learningplatform.backend.dto.ResourceResponse;
+import com.learningplatform.backend.enums.ResourceType;
 import com.learningplatform.backend.service.ResourceService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -22,40 +27,40 @@ public class ResourceController {
     }
 
     /**
-     * Public: Get all published resources
-     * GET /api/resources
+     * Public search + filter + pagination
+     * GET /api/resources?page=0&size=10&topicId=1&resourceType=VIDEO&difficulty=BEGINNER&q=spring
      */
     @GetMapping("/resources")
-    public ResponseEntity<ApiResponse<List<ResourceResponse>>> getPublishedResources() {
-        List<ResourceResponse> resources = resourceService.getPublishedResources();
-        return ResponseEntity.ok(ApiResponse.success("Published resources retrieved successfully", resources));
+    public ResponseEntity<ApiResponse<PagedResponse<ResourceResponse>>> searchResources(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) Long topicId,
+            @RequestParam(required = false) ResourceType resourceType,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) String q
+    ) {
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        PagedResponse<ResourceResponse> result = resourceService.searchPublishedResources(
+                topicId, resourceType, difficulty, q, pageable
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("Resources retrieved successfully", result));
     }
 
-    /**
-     * Public: Get published resources of a specific topic
-     * GET /api/topics/{topicId}/resources
-     */
-    @GetMapping("/topics/{topicId}/resources")
-    public ResponseEntity<ApiResponse<List<ResourceResponse>>> getResourcesByTopic(
-            @PathVariable Long topicId) {
-        List<ResourceResponse> resources = resourceService.getPublishedResourcesByTopic(topicId);
-        return ResponseEntity.ok(ApiResponse.success("Resources retrieved successfully", resources));
-    }
-
-    /**
-     * Public: Get a single resource by ID
-     * GET /api/resources/{id}
-     */
     @GetMapping("/resources/{id}")
     public ResponseEntity<ApiResponse<ResourceResponse>> getResourceById(@PathVariable Long id) {
-        ResourceResponse resource = resourceService.getResourceById(id);
-        return ResponseEntity.ok(ApiResponse.success("Resource retrieved successfully", resource));
+        return ResponseEntity.ok(
+                ApiResponse.success("Resource retrieved successfully", resourceService.getResourceById(id))
+        );
     }
 
-    /**
-     * Admin: Create a new resource
-     * POST /api/admin/resources
-     */
     @PostMapping("/admin/resources")
     public ResponseEntity<ApiResponse<ResourceResponse>> createResource(
             @Valid @RequestBody ResourceRequest request) {
@@ -64,22 +69,16 @@ public class ResourceController {
                 .body(ApiResponse.success("Resource created successfully", created));
     }
 
-    /**
-     * Admin: Update a resource
-     * PUT /api/admin/resources/{id}
-     */
     @PutMapping("/admin/resources/{id}")
     public ResponseEntity<ApiResponse<ResourceResponse>> updateResource(
             @PathVariable Long id,
             @Valid @RequestBody ResourceRequest request) {
-        ResourceResponse updated = resourceService.updateResource(id, request);
-        return ResponseEntity.ok(ApiResponse.success("Resource updated successfully", updated));
+        return ResponseEntity.ok(
+                ApiResponse.success("Resource updated successfully",
+                        resourceService.updateResource(id, request))
+        );
     }
 
-    /**
-     * Admin: Delete a resource
-     * DELETE /api/admin/resources/{id}
-     */
     @DeleteMapping("/admin/resources/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteResource(@PathVariable Long id) {
         resourceService.deleteResource(id);
