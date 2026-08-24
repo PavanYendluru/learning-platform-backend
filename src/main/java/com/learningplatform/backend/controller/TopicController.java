@@ -32,6 +32,13 @@ public class TopicController {
         return ResponseEntity.ok(ApiResponse.success("Topics retrieved successfully", topics));
     }
 
+    @GetMapping("/admin/domains/{domainId}/topics")
+    public ResponseEntity<ApiResponse<List<TopicResponse>>> getTopicsByDomainForAdmin(
+            @PathVariable Long domainId) {
+        return ResponseEntity.ok(ApiResponse.success("Topics retrieved successfully",
+                topicService.getTopicsByDomainForAdmin(domainId)));
+    }
+
     /**
      * Public: Get a single topic by ID
      * GET /api/topics/{id}
@@ -40,6 +47,12 @@ public class TopicController {
     public ResponseEntity<ApiResponse<TopicResponse>> getTopicById(@PathVariable Long id) {
         TopicResponse topic = topicService.getTopicById(id);
         return ResponseEntity.ok(ApiResponse.success("Topic retrieved successfully", topic));
+    }
+
+    @GetMapping("/admin/topics/{id}")
+    public ResponseEntity<ApiResponse<TopicResponse>> getTopicByIdForAdmin(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Topic retrieved successfully",
+                topicService.getTopicByIdForAdmin(id)));
     }
 
     /**

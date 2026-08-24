@@ -47,6 +47,18 @@ public class DomainController {
         return ResponseEntity.ok(ApiResponse.success("Domain retrieved successfully", domain));
     }
 
+    @GetMapping("/admin/domains")
+    public ResponseEntity<ApiResponse<List<DomainResponse>>> getAllDomainsForAdmin() {
+        return ResponseEntity.ok(ApiResponse.success("Domains retrieved successfully",
+                domainService.getAllDomainsForAdmin()));
+    }
+
+    @GetMapping("/admin/domains/{id}")
+    public ResponseEntity<ApiResponse<DomainResponse>> getDomainByIdForAdmin(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Domain retrieved successfully",
+                domainService.getDomainByIdForAdmin(id)));
+    }
+
     /**
      * Admin: Create a new domain
      * POST /api/admin/domains

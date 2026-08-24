@@ -3,7 +3,6 @@ package com.learningplatform.backend.config;
 import com.learningplatform.backend.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -32,20 +31,15 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // Authentication and API documentation are public.
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/youtube/**").permitAll()
-                .requestMatchers("/api/research/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/technology-updates/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/domains/*/technology-updates").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/domains/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/topics/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                // Admin only
+                // Every content-management endpoint is admin-only.
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                // Everything else requires authentication
+                // Users may consume published content, but must be authenticated.
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

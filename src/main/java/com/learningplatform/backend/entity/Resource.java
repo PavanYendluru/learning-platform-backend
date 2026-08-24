@@ -2,6 +2,9 @@ package com.learningplatform.backend.entity;
 
 import com.learningplatform.backend.enums.ResourceStatus;
 import com.learningplatform.backend.enums.ResourceType;
+import com.learningplatform.backend.enums.ResourceVerificationStatus;
+import com.learningplatform.backend.enums.YouTubeContentType;
+
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,6 +29,11 @@ public class Resource {
 
     @Column(nullable = false, length = 300)
     private String title;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private ResourceVerificationStatus verificationStatus = ResourceVerificationStatus.UNVERIFIED;
+
+    // already have lastVerifiedAt
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -36,6 +44,15 @@ public class Resource {
 
     @Column(nullable = false, length = 1000)
     private String externalUrl;
+
+    /** Display order within the topic; lower values appear first when requested. */
+    @Column
+    private Integer sequenceNumber = 1;
+
+    /** Set for manually maintained YouTube links; null for non-YouTube resources. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private YouTubeContentType youtubeContentType;
 
     @Column(length = 1000)
     private String thumbnailUrl;
@@ -110,8 +127,19 @@ public class Resource {
     public ResourceType getResourceType() { return resourceType; }
     public void setResourceType(ResourceType resourceType) { this.resourceType = resourceType; }
 
+    public ResourceVerificationStatus getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(ResourceVerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
+    }
+
     public String getExternalUrl() { return externalUrl; }
     public void setExternalUrl(String externalUrl) { this.externalUrl = externalUrl; }
+
+    public Integer getSequenceNumber() { return sequenceNumber; }
+    public void setSequenceNumber(Integer sequenceNumber) { this.sequenceNumber = sequenceNumber; }
+
+    public YouTubeContentType getYoutubeContentType() { return youtubeContentType; }
+    public void setYoutubeContentType(YouTubeContentType youtubeContentType) { this.youtubeContentType = youtubeContentType; }
 
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }

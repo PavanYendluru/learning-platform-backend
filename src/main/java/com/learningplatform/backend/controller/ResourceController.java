@@ -4,7 +4,9 @@ import com.learningplatform.backend.dto.ApiResponse;
 import com.learningplatform.backend.dto.PagedResponse;
 import com.learningplatform.backend.dto.ResourceRequest;
 import com.learningplatform.backend.dto.ResourceResponse;
+import com.learningplatform.backend.dto.ResourceVerificationRequest;
 import com.learningplatform.backend.enums.ResourceType;
+import com.learningplatform.backend.enums.ResourceStatus;
 import com.learningplatform.backend.service.ResourceService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -59,6 +61,59 @@ public class ResourceController {
         return ResponseEntity.ok(
                 ApiResponse.success("Resource retrieved successfully", resourceService.getResourceById(id))
         );
+    }
+
+    /** Admin-only resource listing, including non-published statuses. */
+    @GetMapping("/admin/resources")
+    public ResponseEntity<ApiResponse<PagedResponse<ResourceResponse>>> searchAdminResources(
+            @RequestParam(required = false) ResourceStatus status,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) Long topicId,
+            @RequestParam(required = false) ResourceType resourceType,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) String q) {
+
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return ResponseEntity.ok(ApiResponse.success("Resources retrieved successfully",
+                resourceService.searchResources(status, topicId, resourceType, difficulty, q, pageable)));
+    }
+
+    @GetMapping("/admin/resources/{id}")
+    public ResponseEntity<ApiResponse<ResourceResponse>> getAdminResourceById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Resource retrieved successfully",
+                resourceService.getAdminResourceById(id)));
+    }
+    @PostMapping("/admin/resources/{id}/submit-for-review")
+    public ResponseEntity<ApiResponse<ResourceResponse>> submitForReview(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Resource submitted for review",
+                resourceService.submitForReview(id)));
+    }
+
+    @PostMapping("/admin/resources/{id}/approve")
+    public ResponseEntity<ApiResponse<ResourceResponse>> approve(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Resource approved and published",
+                resourceService.approve(id)));
+    }
+
+    @PostMapping("/admin/resources/{id}/reject")
+    public ResponseEntity<ApiResponse<ResourceResponse>> reject(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("Resource rejected",
+                resourceService.reject(id)));
+    }
+
+    @PutMapping("/admin/resources/{id}/verification")
+    public ResponseEntity<ApiResponse<ResourceResponse>> updateVerification(
+            @PathVariable Long id,
+            @Valid @RequestBody ResourceVerificationRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Verification status updated",
+                resourceService.updateVerification(id, request)));
     }
 
     @PostMapping("/admin/resources")

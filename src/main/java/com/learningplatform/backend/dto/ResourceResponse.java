@@ -2,6 +2,8 @@ package com.learningplatform.backend.dto;
 
 import com.learningplatform.backend.enums.ResourceStatus;
 import com.learningplatform.backend.enums.ResourceType;
+import com.learningplatform.backend.enums.ResourceVerificationStatus;
+import com.learningplatform.backend.enums.YouTubeContentType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -12,7 +14,10 @@ public class ResourceResponse {
     private String title;
     private String description;
     private ResourceType resourceType;
+    private ResourceVerificationStatus verificationStatus;
     private String externalUrl;
+    private YouTubeContentType youtubeContentType;
+    private Integer sequenceNumber;
     private String thumbnailUrl;
     private String author;
     private String publisher;
@@ -46,8 +51,19 @@ public class ResourceResponse {
     public ResourceType getResourceType() { return resourceType; }
     public void setResourceType(ResourceType resourceType) { this.resourceType = resourceType; }
 
+    public ResourceVerificationStatus getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(ResourceVerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
+    }
+
     public String getExternalUrl() { return externalUrl; }
     public void setExternalUrl(String externalUrl) { this.externalUrl = externalUrl; }
+
+    public YouTubeContentType getYoutubeContentType() { return youtubeContentType; }
+    public void setYoutubeContentType(YouTubeContentType youtubeContentType) { this.youtubeContentType = youtubeContentType; }
+
+    public Integer getSequenceNumber() { return sequenceNumber; }
+    public void setSequenceNumber(Integer sequenceNumber) { this.sequenceNumber = sequenceNumber; }
 
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }

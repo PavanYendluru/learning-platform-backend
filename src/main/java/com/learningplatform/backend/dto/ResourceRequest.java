@@ -2,8 +2,10 @@ package com.learningplatform.backend.dto;
 
 import com.learningplatform.backend.enums.ResourceStatus;
 import com.learningplatform.backend.enums.ResourceType;
+import com.learningplatform.backend.enums.YouTubeContentType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
@@ -24,6 +26,10 @@ public class ResourceRequest {
     @NotBlank(message = "External URL is required")
     @Size(max = 1000, message = "External URL is too long")
     private String externalUrl;
+    private YouTubeContentType youtubeContentType;
+
+    @Min(value = 1, message = "Sequence number must be at least 1")
+    private Integer sequenceNumber;
 
     private String thumbnailUrl;
     private String author;
@@ -54,6 +60,12 @@ public class ResourceRequest {
 
     public String getExternalUrl() { return externalUrl; }
     public void setExternalUrl(String externalUrl) { this.externalUrl = externalUrl; }
+
+    public YouTubeContentType getYoutubeContentType() { return youtubeContentType; }
+    public void setYoutubeContentType(YouTubeContentType youtubeContentType) { this.youtubeContentType = youtubeContentType; }
+
+    public Integer getSequenceNumber() { return sequenceNumber; }
+    public void setSequenceNumber(Integer sequenceNumber) { this.sequenceNumber = sequenceNumber; }
 
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }

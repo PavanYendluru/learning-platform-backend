@@ -37,7 +37,29 @@ public class DomainServiceImpl implements DomainService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<DomainResponse> getAllDomainsForAdmin() {
+        return domainRepository.findAll(org.springframework.data.domain.Sort.by("name").ascending())
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public DomainResponse getDomainById(Long id) {
+        Domain domain = domainRepository.findById(id)
+                .orElseThrow(() -> new DomainNotFoundException(id));
+
+        if (domain.getStatus() != Status.ACTIVE) {
+            throw new DomainNotFoundException(id);
+        }
+
+        return mapToResponse(domain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DomainResponse getDomainByIdForAdmin(Long id) {
         Domain domain = domainRepository.findById(id)
                 .orElseThrow(() -> new DomainNotFoundException(id));
 

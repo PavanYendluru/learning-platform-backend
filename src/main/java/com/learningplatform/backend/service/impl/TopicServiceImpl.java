@@ -36,7 +36,10 @@ public class TopicServiceImpl implements TopicService {
     public List<TopicResponse> getTopicsByDomain(Long domainId) {
 
         // Verify domain exists
-        if (!domainRepository.existsById(domainId)) {
+        Domain domain = domainRepository.findById(domainId)
+                .orElseThrow(() -> new DomainNotFoundException(domainId));
+
+        if (domain.getStatus() != Status.ACTIVE) {
             throw new DomainNotFoundException(domainId);
         }
 
@@ -52,8 +55,35 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TopicResponse> getTopicsByDomainForAdmin(Long domainId) {
+        if (!domainRepository.existsById(domainId)) {
+            throw new DomainNotFoundException(domainId);
+        }
+
+        return topicRepository.findByDomainIdOrderBySequenceNumberAsc(domainId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TopicResponse getTopicById(Long id) {
 
+        Topic topic = topicRepository.findById(id)
+                .orElseThrow(() -> new TopicNotFoundException(id));
+
+        if (topic.getStatus() != Status.ACTIVE
+                || topic.getDomain().getStatus() != Status.ACTIVE) {
+            throw new TopicNotFoundException(id);
+        }
+
+        return mapToResponse(topic);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TopicResponse getTopicByIdForAdmin(Long id) {
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> new TopicNotFoundException(id));
 
