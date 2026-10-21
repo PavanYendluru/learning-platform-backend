@@ -40,6 +40,12 @@ public class TechnologyUpdateController {
                 updateService.getById(id)));
     }
 
+    @GetMapping("/admin/technology-updates")
+    public ResponseEntity<ApiResponse<List<TechnologyUpdateResponse>>> getAllUpdates() {
+        return ResponseEntity.ok(ApiResponse.success("All technology updates retrieved successfully",
+                updateService.getAllUpdates()));
+    }
+
     @PostMapping("/admin/technology-updates")
     public ResponseEntity<ApiResponse<TechnologyUpdateResponse>> create(
             @Valid @RequestBody TechnologyUpdateRequest request) {

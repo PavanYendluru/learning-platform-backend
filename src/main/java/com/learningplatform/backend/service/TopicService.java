@@ -13,6 +13,9 @@ public interface TopicService {
     @PreAuthorize("hasRole('ADMIN')")
     List<TopicResponse> getTopicsByDomainForAdmin(Long domainId);
 
+    @PreAuthorize("hasRole('ADMIN')")
+    List<TopicResponse> getAllTopicsForAdmin();
+
     @PreAuthorize("isAuthenticated()")
     TopicResponse getTopicById(Long id);
 

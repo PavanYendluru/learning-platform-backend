@@ -5,6 +5,7 @@ import com.learningplatform.backend.dto.TechnologyUpdateResponse;
 import java.util.List;
 
 public interface TechnologyUpdateService {
+    List<TechnologyUpdateResponse> getAllUpdates();
     List<TechnologyUpdateResponse> getPublishedUpdates();
     List<TechnologyUpdateResponse> getPublishedUpdatesByDomain(Long domainId);
     TechnologyUpdateResponse getById(Long id);

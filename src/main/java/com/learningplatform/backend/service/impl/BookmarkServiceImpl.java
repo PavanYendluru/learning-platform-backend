@@ -75,6 +75,15 @@ public class BookmarkServiceImpl implements BookmarkService {
         r.setResourceType(bookmark.getResource().getResourceType().name());
         r.setExternalUrl(bookmark.getResource().getExternalUrl());
         r.setCreatedAt(bookmark.getCreatedAt());
+
+        if (bookmark.getResource().getTopic() != null) {
+            r.setTopicId(bookmark.getResource().getTopic().getId());
+            r.setTopicName(bookmark.getResource().getTopic().getName());
+            if (bookmark.getResource().getTopic().getDomain() != null) {
+                r.setDomainId(bookmark.getResource().getTopic().getDomain().getId());
+                r.setDomainName(bookmark.getResource().getTopic().getDomain().getName());
+            }
+        }
         return r;
     }
 }

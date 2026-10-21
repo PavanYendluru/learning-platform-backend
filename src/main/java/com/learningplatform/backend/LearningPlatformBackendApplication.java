@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Main entry point of the Learning Platform Backend.
  */
+
 @SpringBootApplication
 public class LearningPlatformBackendApplication {
 

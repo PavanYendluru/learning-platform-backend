@@ -1,4 +1,3 @@
-// BookmarkRepository.java
 package com.learningplatform.backend.repository;
 
 import com.learningplatform.backend.entity.Bookmark;
@@ -11,4 +10,7 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByUserIdAndResourceId(Long userId, Long resourceId);
     boolean existsByUserIdAndResourceId(Long userId, Long resourceId);
     void deleteByUserIdAndResourceId(Long userId, Long resourceId);
+    void deleteByResourceId(Long resourceId);
+    void deleteByResourceIdIn(List<Long> resourceIds);
+    long countByUserId(Long userId);
 }

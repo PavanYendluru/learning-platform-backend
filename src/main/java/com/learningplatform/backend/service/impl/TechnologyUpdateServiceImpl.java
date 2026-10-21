@@ -10,6 +10,7 @@ import com.learningplatform.backend.exception.ResourceNotFoundException;
 import com.learningplatform.backend.repository.DomainRepository;
 import com.learningplatform.backend.repository.TechnologyUpdateRepository;
 import com.learningplatform.backend.service.TechnologyUpdateService;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,15 @@ public class TechnologyUpdateServiceImpl implements TechnologyUpdateService {
                                        DomainRepository domainRepository) {
         this.updateRepository = updateRepository;
         this.domainRepository = domainRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TechnologyUpdateResponse> getAllUpdates() {
+        return updateRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override

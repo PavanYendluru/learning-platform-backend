@@ -14,6 +14,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import jakarta.validation.ConstraintViolationException;
 
 import java.util.LinkedHashMap;
@@ -131,6 +133,18 @@ public class GlobalExceptionHandler {
     /**
      * Fallback for any unexpected exception.
      */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("The requested endpoint was not found: " + ex.getResourcePath()));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
         log.error("Unexpected error", ex);

@@ -13,8 +13,10 @@ import com.learningplatform.backend.enums.YouTubeContentType;
 import com.learningplatform.backend.exception.BadRequestException;
 import com.learningplatform.backend.exception.ResourceNotFoundException;
 import com.learningplatform.backend.exception.TopicNotFoundException;
+import com.learningplatform.backend.repository.BookmarkRepository;
 import com.learningplatform.backend.repository.ResourceRepository;
 import com.learningplatform.backend.repository.TopicRepository;
+import com.learningplatform.backend.repository.UserResourceProgressRepository;
 import com.learningplatform.backend.service.ResourceService;
 
 import org.springframework.data.domain.Page;
@@ -34,11 +36,17 @@ public class ResourceServiceImpl implements ResourceService {
 
     private final ResourceRepository resourceRepository;
     private final TopicRepository topicRepository;
+    private final BookmarkRepository bookmarkRepository;
+    private final UserResourceProgressRepository userResourceProgressRepository;
 
     public ResourceServiceImpl(ResourceRepository resourceRepository,
-                               TopicRepository topicRepository) {
+                               TopicRepository topicRepository,
+                               BookmarkRepository bookmarkRepository,
+                               UserResourceProgressRepository userResourceProgressRepository) {
         this.resourceRepository = resourceRepository;
         this.topicRepository = topicRepository;
+        this.bookmarkRepository = bookmarkRepository;
+        this.userResourceProgressRepository = userResourceProgressRepository;
     }
 
     @Override
@@ -236,6 +244,8 @@ public class ResourceServiceImpl implements ResourceService {
             throw new ResourceNotFoundException(id);
         }
 
+        bookmarkRepository.deleteByResourceId(id);
+        userResourceProgressRepository.deleteByResourceId(id);
         resourceRepository.deleteById(id);
     }
 
@@ -252,8 +262,12 @@ public class ResourceServiceImpl implements ResourceService {
         String externalUrl = request.getExternalUrl().trim();
         resource.setExternalUrl(externalUrl);
 
-        validateYouTubeUrl(externalUrl, request.getYoutubeContentType());
-        resource.setYoutubeContentType(request.getYoutubeContentType());
+        if (request.getResourceType() == ResourceType.VIDEO) {
+            validateYouTubeUrl(externalUrl, request.getYoutubeContentType());
+            resource.setYoutubeContentType(request.getYoutubeContentType());
+        } else {
+            resource.setYoutubeContentType(null);
+        }
         if (request.getSequenceNumber() != null) {
             resource.setSequenceNumber(request.getSequenceNumber());
         } else if (resource.getSequenceNumber() == null) {
@@ -442,6 +456,9 @@ public class ResourceServiceImpl implements ResourceService {
         }
         if (request.getExternalUrl() == null || request.getExternalUrl().isBlank()) {
             throw new BadRequestException("External URL is required");
+        }
+        if (request.getResourceType() != ResourceType.VIDEO) {
+            request.setYoutubeContentType(null);
         }
         if (request.getYoutubeContentType() != null
                 && request.getResourceType() != ResourceType.VIDEO) {

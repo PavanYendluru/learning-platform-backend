@@ -11,14 +11,26 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     Page<Resource> findByStatus(ResourceStatus status, Pageable pageable);
 
     Page<Resource> findByTopicIdAndStatus(Long topicId, ResourceStatus status, Pageable pageable);
 
+    List<Resource> findByTopicId(Long topicId);
+
+    List<Resource> findByTopicIdAndStatus(Long topicId, ResourceStatus status);
+
     long countByStatus(ResourceStatus status);
     long countByVerificationStatus(ResourceVerificationStatus status);
+
+    long countByTopicId(Long topicId);
+    long countByTopicIdAndStatus(Long topicId, ResourceStatus status);
+
+    long countByTopicDomainId(Long domainId);
+    long countByTopicDomainIdAndStatus(Long domainId, ResourceStatus status);
 
     @Query("""
         SELECT r FROM Resource r

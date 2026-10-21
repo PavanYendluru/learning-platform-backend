@@ -17,6 +17,15 @@ public class PagedResponse<T> {
 
     public PagedResponse() {}
 
+    public PagedResponse(List<T> content, int page, int size, long totalElements, int totalPages, boolean last) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = totalPages;
+        this.last = last;
+    }
+
     public static <T> PagedResponse<T> from(Page<T> page) {
         PagedResponse<T> response = new PagedResponse<>();
         response.content = page.getContent();
